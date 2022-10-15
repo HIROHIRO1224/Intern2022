@@ -15,9 +15,9 @@ public class Function
     /// <param name="input"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    public APIGatewayProxyResponce FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+    public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        var res=new APIGatewayProxyResponce();
+        var res=new APIGatewayProxyResponse();
         res.Body="Hello World!";
         res.StatusCode=(int)HttpStatusCode.OK;
         return res;

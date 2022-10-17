@@ -9,14 +9,18 @@ namespace Intern202201AwsCdk
     {
         internal Intern202201AwsCdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
-            var hello =new Function(this,"HelloHandler",new FunctionProps
+            var searchFace = new Function(this, "HelloHandler", new FunctionProps
             {
-                Runtime=Runtime.DOTNET_6,
-                Code=Code.FromAsset("./lambda/HelloHandler/src/HelloHandler/bin/Debug/net6.0/publish"),
-                Handler="HelloHandler::HelloHandler.Function::FunctionHandler"
+                Runtime = Runtime.DOTNET_6,
+                Code = Code.FromAsset("./lambda/HelloHandler/src/HelloHandler/bin/Debug/net6.0/publish"),
+                Handler = "HelloHandler::HelloHandler.Function::FunctionHandler",
             });
-            
-            new LambdaRestApi(this,"Endpoint",new LambdaRestApiProps{Handler = hello}){};
+
+            var api = new RestApi(this, "api");
+            api.Root.AddCorsPreflight(new CorsOptions(){AllowOrigins=new string[1]{"*"} });
+            var faceDetectMethod = api.Root.AddResource("faceSearch");
+            faceDetectMethod.AddMethod("OPTIONS", new MockIntegration());
+            faceDetectMethod.AddMethod("POST", new LambdaIntegration(searchFace));
         }
     }
 }

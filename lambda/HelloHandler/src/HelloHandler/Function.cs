@@ -50,13 +50,13 @@ public class Function
             string responceBodyJson = JsonConvert.SerializeObject(responceBody);
 
             responce.Body = responceBodyJson;
-            
+
             var headers = new Dictionary<string, string>();
             headers.Add("Access-Control-Allow-Origin", "*");
             headers.Add("Access-Control-Allow-Headers", "Content-Type");
             headers.Add("Access-Control-Allow-Methods", "POST,OPTIONS");
             responce.Headers = headers;
-            
+            responce.StatusCode = (int)HttpStatusCode.OK;
             return responce;
 
 

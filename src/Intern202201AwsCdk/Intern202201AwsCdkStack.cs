@@ -18,7 +18,12 @@ namespace Intern202201AwsCdk
 
             var api = new RestApi(this, "api");
             var faceDetectMethod = api.Root.AddResource("faceSearch");
-            faceDetectMethod.AddMethod("OPTIONS", new MockIntegration());
+            faceDetectMethod.AddCorsPreflight(
+                new CorsOptions{
+                    AllowHeaders=new string[1]{"Content-Type"},
+                    AllowMethods=new string[2]{"OPTIONS","POST"},
+                    AllowOrigins=new string[1]{"*"},
+            });
             faceDetectMethod.AddMethod("POST", new LambdaIntegration(searchFace));
         }
     }

@@ -42,7 +42,7 @@ public class Function
                 {
                     SearchFaceResponce obj = new SearchFaceResponce();
 
-                    obj.Name.Append(item.Face.ExternalImageId);
+                    obj.Name=item.Face.ExternalImageId;
                     obj.Confidence = item.Face.Confidence;
                     responceBody.Add(obj);
                 }

@@ -5,7 +5,7 @@ namespace HelloHandler.Model;
 
 public class SearchFaceResponce
 {
-    public StringBuilder Name{get; set;}=new StringBuilder();
+    public string Name{get; set;}
     public float Confidence{get; set;}
     
 }

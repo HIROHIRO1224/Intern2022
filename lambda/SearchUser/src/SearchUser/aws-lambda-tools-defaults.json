@@ -11,6 +11,6 @@
   "function-architecture": "x86_64",
   "function-runtime": "dotnet6",
   "function-memory-size": 256,
-  "function-timeout": 30,
+  "function-timeout": 300,
   "function-handler": "SearchUser::SearchUser.Function::FunctionHandler"
 }

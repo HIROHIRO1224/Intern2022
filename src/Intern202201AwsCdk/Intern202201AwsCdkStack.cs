@@ -9,6 +9,7 @@ namespace Intern202201AwsCdk
     {
         internal Intern202201AwsCdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
+            // 関数のインスタンス
             Function searchFace = new Function(this, "HelloHandler", new FunctionProps
             {
                 Runtime = Runtime.DOTNET_6,
@@ -22,6 +23,14 @@ namespace Intern202201AwsCdk
                 Code = Code.FromAsset("./lambda/SearchUser/src/SearchUser/bin/Release/net6.0/publish"),
                 Handler = "SearchUser::SearchUser.Function::FunctionHandler",
             });
+            
+            Function pushHistory=new Function(this,"PushHistory",new FunctionProps{
+                Runtime=Runtime.DOTNET_6,
+                Code=Code.FromAsset("./lambda/PushHistory/src/PushHistory/bin/Release/net6.0/publish"),
+                Handler="PushHistory::PushHistory.Function::FunctionHandler",
+            });
+
+
             // APIのインスタンス生成
             var api = new RestApi(this, "EAEMS");
 

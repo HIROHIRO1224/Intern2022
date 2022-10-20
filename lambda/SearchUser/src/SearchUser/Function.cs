@@ -39,6 +39,7 @@ public class Function
     public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
         headers.Clear();
+        sql.Clear();
         
         response = new APIGatewayProxyResponse();
         sql.Append($"select name from m_users where image_name = '{request.Body}';");
@@ -66,12 +67,14 @@ public class Function
         {
             response.Body = $"失敗しますた:{e.Message}";
             response.StatusCode = (int)HttpStatusCode.BadGateway;
+            con.Close();
 
         }
         catch (SystemException e)
         {
             response.Body = $"致命的な失敗をしますた:{e.Message}";
             response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            con.Close();
 
         }
         finally

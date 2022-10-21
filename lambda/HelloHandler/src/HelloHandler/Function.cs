@@ -24,6 +24,13 @@ public class Function
     /// <returns></returns>
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
+        APIGatewayProxyResponse responce = new APIGatewayProxyResponse();
+        var headers = new Dictionary<string, string>();
+        headers.Add("Access-Control-Allow-Origin", "*");
+        headers.Add("Access-Control-Allow-Headers", "Content-Type");
+        headers.Add("Access-Control-Allow-Methods", "POST,OPTIONS");
+        responce.Headers = headers;
+
         try
         {
             this.rekognitionClient = new AmazonRekognitionClient();
@@ -33,7 +40,6 @@ public class Function
             string image = body[1];
             var decodedImage = Convert.FromBase64String(image);
             SearchFacesByImageResponse result = await SearchFace(decodedImage, "yoshikawa-hiroto");
-            APIGatewayProxyResponse responce = new APIGatewayProxyResponse();
 
             List<SearchFaceResponce> responceBody = new List<SearchFaceResponce>(5);
 
@@ -43,7 +49,7 @@ public class Function
                 {
                     SearchFaceResponce obj = new SearchFaceResponce();
 
-                    obj.Name=item.Face.ExternalImageId;
+                    obj.Name = item.Face.ExternalImageId;
                     obj.Confidence = item.Face.Confidence;
                     responceBody.Add(obj);
                 }
@@ -52,11 +58,6 @@ public class Function
 
             responce.Body = responceBodyJson;
 
-            var headers = new Dictionary<string, string>();
-            headers.Add("Access-Control-Allow-Origin", "*");
-            headers.Add("Access-Control-Allow-Headers", "Content-Type");
-            headers.Add("Access-Control-Allow-Methods", "POST,OPTIONS");
-            responce.Headers = headers;
             responce.StatusCode = (int)HttpStatusCode.OK;
             return responce;
 
@@ -64,7 +65,9 @@ public class Function
         }
         catch (System.Exception e)
         {
-            throw e;
+            responce.Body=e.Message;
+            responce.StatusCode=403;
+            return responce;
         }
     }
     /// <summary>

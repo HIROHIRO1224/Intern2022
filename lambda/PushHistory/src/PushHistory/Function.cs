@@ -10,15 +10,25 @@ namespace PushHistory;
 
 public class Function
 {
-    ///RDSのエンドポイント
+    /// <summary>
+    /// データベースのエンドポイント名
+    /// </summary>
     const string server = "yoshikawa-test-instance-1.ctl8p031cpd0.ap-northeast-1.rds.amazonaws.com";
-    // データベース名
+    /// <summary>
+    /// データベース名
+    /// </summary>
     const string database = "yoshikawa_db";
-    // ユーザー名
+    /// <summary>
+    /// ユーザー名
+    /// </summary>
     const string user = "admin";
-    // パスワード
+    /// <summary>
+    /// パスワード
+    /// </summary>
     const string password = "dp3245TNT";
-    // 文字コード
+    /// <summary>
+    /// 文字コード
+    /// </summary>
     const string charset = "utf8";
 
 
@@ -40,10 +50,12 @@ public class Function
         headers.Clear();
         sql.Clear();
         responce = new APIGatewayProxyResponse();
-        string id = "";
+
+        string id = Guid.NewGuid().ToString();
+
         string[] req = request.Body.Split(",");
         THistory tHistory = new THistory(id, int.Parse(req[0]), int.Parse(req[1]), req[2]);
-        sql.Append($"insert into t_histories (id,user_id,room_id,in_or_out) values ();");
+        sql.Append($"insert into t_histories (id,user_id,room_id,in_or_out) values (@id,@userId,@roomId,@inOrOut);");
 
         headers.Add("Access-Control-Allow-Origin", "*");
         headers.Add("Access-Control-Allow-Headers", "Content-Type");
@@ -56,10 +68,25 @@ public class Function
         {
             con.Open();
 
-            command = new MySqlCommand(sql.ToString());
-            var reader = command.ExecuteReader();
-            reader.Read();
-            responce.Body = reader.GetString(0);
+            command = new MySqlCommand();
+            command.CommandText=sql.ToString();
+            command.Connection=con;
+
+            command.Parameters.AddWithValue("@id",id);
+            command.Parameters.AddWithValue("@userId",req[0]);
+            command.Parameters.AddWithValue("@roomId",req[1]);
+            command.Parameters.AddWithValue("@inOrOut",req[2]);
+            
+            int result=command.ExecuteNonQuery();
+            if(result<1)
+            {
+                responce.Body="追加できませんでした";
+                responce.StatusCode=(int)HttpStatusCode.NoContent;
+            }else
+            {
+                responce.Body="追加完了";
+                responce.StatusCode=(int)HttpStatusCode.OK;
+            }
 
             con.Close();
         }

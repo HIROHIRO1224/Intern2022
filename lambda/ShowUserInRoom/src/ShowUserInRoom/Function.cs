@@ -1,17 +1,14 @@
+using System.Net;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using MySql.Data.MySqlClient;
-using MySql.Data.Types;
-using System.Collections.Generic;
-using System.Net;
-using System.Diagnostics;
 using System.Text;
 using System.Data;
 using Newtonsoft.Json;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace SearchUser;
+namespace ShowUserInRoom;
 
 public class Function
 {
@@ -29,13 +26,11 @@ public class Function
     /// ユーザー名
     /// </summary>
     const string user = "admin";
-    
+
     /// <summary>
     /// パスワード
     /// </summary>
     const string password = "dp3245TNT";
-    // 文字コード
-    const string charset = "utf8";
 
     StringBuilder sql = new StringBuilder(100);
     MySqlConnection? con = null;
@@ -50,45 +45,44 @@ public class Function
     /// <returns></returns>
     public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        headers.Clear();
         sql.Clear();
-        
+        headers.Clear();
         response = new APIGatewayProxyResponse();
-        sql.Append($"select id,name from m_users where image_name = '{request.Body}';");
 
         headers.Add("Access-Control-Allow-Origin", "*");
         headers.Add("Access-Control-Allow-Headers", "Content-Type");
         headers.Add("Access-Control-Allow-Methods", "POST,OPTIONS");
         response.Headers = headers;
 
+        sql.Append(
+            "select m_users.id, m_users.name from t_histories inner join m_users on t_histories.user_id=m_users.id;"
+            );
         con = new MySqlConnection($"Server={server};Database={database};Uid={user};Pwd={password}");
+        DataTable dataTable = new DataTable();
         try
         {
             con.Open();
-            // response.Body = "接続できますた";
-            command = new MySqlCommand(sql.ToString(), con);
-            var reader = command.ExecuteReader();
-            reader.Read();
-            MyResponseBody responseBody=new MyResponseBody(reader.GetInt32("id"),reader.GetString("name"));
-            response.Body = JsonConvert.SerializeObject(responseBody).ToString();
 
+            command = new MySqlCommand();
+            command.CommandText = sql.ToString();
+            command.Connection = con;
+            var reader = command.ExecuteReader();
+            dataTable.Load(reader);
+
+            response.Body = JsonConvert.SerializeObject(dataTable).ToString();
             response.StatusCode = (int)HttpStatusCode.OK;
             con.Close();
 
         }
-        catch (MySqlException)
+        catch (MySqlException e)
         {
-            response.Body = "";
-            response.StatusCode = (int)HttpStatusCode.BadGateway;
-            con.Close();
-
+            response.Body = $"Mysql Error:{e}";
+            response.StatusCode = (int)HttpStatusCode.BadRequest;
         }
-        catch (SystemException e)
+        catch (Exception e)
         {
-            response.Body = $"致命的な失敗をしますた:{e.Message}";
-            response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            con.Close();
-
+            response.Body = $"Fatal Error:{e}";
+            response.StatusCode = (int)HttpStatusCode.BadRequest;
         }
         finally
         {
@@ -97,5 +91,4 @@ public class Function
 
         return response;
     }
-
 }

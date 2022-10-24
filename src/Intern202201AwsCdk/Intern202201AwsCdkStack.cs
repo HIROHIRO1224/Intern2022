@@ -11,30 +11,10 @@ namespace Intern202201AwsCdk
         internal Intern202201AwsCdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
             // 関数のインスタンス
-            // Function searchFace = new Function(this, "HelloHandler", new FunctionProps
-            // {
-            //     Runtime = Runtime.DOTNET_6,
-            //     Code = Code.FromAsset("./lambda/HelloHandler/src/HelloHandler/bin/Debug/net6.0/publish"),
-            //     Handler = "HelloHandler::HelloHandler.Function::FunctionHandler",
-            // });
             Function searchFace = new SearchFaceFunction(this).function;
-
-            // Function findUser = new Function(this, "SearchUser", new FunctionProps
-            // {
-            //     Runtime = Runtime.DOTNET_6,
-            //     Code = Code.FromAsset("./lambda/SearchUser/src/SearchUser/bin/Debug/net6.0/publish"),
-            //     Handler = "SearchUser::SearchUser.Function::FunctionHandler",
-            // });
             Function searchUser = new SearchUserFunction(this).function;
-
-            // Function pushHistory = new Function(this, "PushHistory", new FunctionProps
-            // {
-            //     Runtime = Runtime.DOTNET_6,
-            //     Code = Code.FromAsset("./lambda/PushHistory/src/PushHistory/bin/Debug/net6.0/publish"),
-            //     Handler = "PushHistory::PushHistory.Function::FunctionHandler",
-            // });
             Function pushHistory = new PushHistoryFunction(this).function;
-
+            Function showHistory=new ShowHistoryFunction(this).function;
 
             // APIのインスタンス生成
             var api = new RestApi(this, "EAEMS");
@@ -74,8 +54,15 @@ namespace Intern202201AwsCdk
                 AllowMethods = new string[2] { "OPTIONS", "POST" },
                 AllowOrigins = new string[1] { "*" },
             });
-
             historyPushResource.AddMethod("POST", new LambdaIntegration(pushHistory));
+            var historyShowResource=historyResourse.AddResource("show");
+            historyShowResource.AddCorsPreflight(new CorsOptions{
+                                AllowHeaders = new string[1] { "Content-Type" },
+                AllowMethods = new string[2] { "OPTIONS", "POST" },
+                AllowOrigins = new string[1] { "*" },
+
+            });
+            historyShowResource.AddMethod("POST",new LambdaIntegration(showHistory));
         }
     }
 }

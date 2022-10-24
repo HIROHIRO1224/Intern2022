@@ -16,6 +16,8 @@ public class Function
 {
 
     private AmazonRekognitionClient rekognitionClient = new AmazonRekognitionClient(Amazon.RegionEndpoint.APNortheast1);
+    private APIGatewayProxyResponse? response = null;
+    private Dictionary<string, string> headers = new Dictionary<string, string>();
     /// <summary>
     /// A simple function that takes a string and does a ToUpper
     /// </summary>
@@ -24,12 +26,12 @@ public class Function
     /// <returns></returns>
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        APIGatewayProxyResponse responce = new APIGatewayProxyResponse();
-        var headers = new Dictionary<string, string>();
+        headers.Clear();
+        response = new APIGatewayProxyResponse();
         headers.Add("Access-Control-Allow-Origin", "*");
         headers.Add("Access-Control-Allow-Headers", "Content-Type");
         headers.Add("Access-Control-Allow-Methods", "POST,OPTIONS");
-        responce.Headers = headers;
+        response.Headers = headers;
 
         try
         {
@@ -42,33 +44,44 @@ public class Function
             SearchFacesByImageResponse result = await SearchFace(decodedImage, "yoshikawa-hiroto");
 
             List<SearchFaceResponce> responceBody = new List<SearchFaceResponce>(5);
-
-            foreach (var item in result.FaceMatches)
+            if (result.FaceMatches.Count > 0)
             {
-                if (item.Face.Confidence >= 0.9)
+                foreach (var item in result.FaceMatches)
                 {
-                    SearchFaceResponce obj = new SearchFaceResponce();
+                    if (item.Face.Confidence >= 0.9)
+                    {
+                        SearchFaceResponce obj = new SearchFaceResponce();
 
-                    obj.Name = item.Face.ExternalImageId;
-                    obj.Confidence = item.Face.Confidence;
-                    responceBody.Add(obj);
+                        obj.Name = item.Face.ExternalImageId;
+                        obj.Confidence = item.Face.Confidence;
+                        responceBody.Add(obj);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
+                string responceBodyJson = JsonConvert.SerializeObject(responceBody);
+
+                response.Body = responceBodyJson;
+
+                response.StatusCode = (int)HttpStatusCode.OK;
+
             }
-            string responceBodyJson = JsonConvert.SerializeObject(responceBody);
-
-            responce.Body = responceBodyJson;
-
-            responce.StatusCode = (int)HttpStatusCode.OK;
-            return responce;
-
+            else
+            {
+                response.Body = "none";
+                response.StatusCode = (int)HttpStatusCode.OK;
+            }
 
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
-            responce.Body=e.Message;
-            responce.StatusCode=403;
-            return responce;
+            response.Body = e.Message;
+            response.StatusCode = 403;
         }
+
+        return response;
     }
     /// <summary>
     /// collectionIdを用いて該当する人物を検索して結果を返す

@@ -55,17 +55,18 @@ public class Function
         response.Headers = headers;
 
         sql.Append(
-            "select m_users.id, m_users.name from t_histories inner join m_users on t_histories.user_id=m_users.id;"
+            $"select t_histories.user_id,m_users.name,t_histories.stamp_date from t_histories inner join m_users on m_users.id = t_histories.user_id where stamp_date in (select max(stamp_date) from t_histories group by user_id) and in_or_out ='in' and room_id = {request.Body};"
             );
         con = new MySqlConnection($"Server={server};Database={database};Uid={user};Pwd={password}");
         DataTable dataTable = new DataTable();
         try
         {
             con.Open();
-
+            string roomId = request.Body.ToString();
             command = new MySqlCommand();
             command.CommandText = sql.ToString();
             command.Connection = con;
+            // command.Parameters.AddWithValue("@roomId",roomId);
             var reader = command.ExecuteReader();
             dataTable.Load(reader);
 

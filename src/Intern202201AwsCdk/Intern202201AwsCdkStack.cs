@@ -14,8 +14,8 @@ namespace Intern202201AwsCdk
             Function searchFace = new SearchFaceFunction(this).function;
             Function searchUser = new SearchUserFunction(this).function;
             Function pushHistory = new PushHistoryFunction(this).function;
-            Function showHistory=new ShowHistoryFunction(this).function;
-
+            Function showHistory = new ShowHistoryFunction(this).function;
+            Function showUserInRoom = new ShowUserInRoomFunction(this).function;
             // APIのインスタンス生成
             var api = new RestApi(this, "EAEMS");
 
@@ -28,8 +28,20 @@ namespace Intern202201AwsCdk
                     AllowMethods = new string[2] { "OPTIONS", "POST" },
                     AllowOrigins = new string[1] { "*" },
 
-                });
+                }
+            );
             faceSearchMethod.AddMethod("POST", new LambdaIntegration(searchFace));
+
+            var InRoomResource = api.Root.AddResource("InRoom");
+            InRoomResource.AddCorsPreflight(
+                new CorsOptions
+                {
+                    AllowHeaders = new string[1] { "Content-Type" },
+                    AllowMethods = new string[2] { "OPTIONS", "POST" },
+                    AllowOrigins = new string[1] { "*" },
+                }
+            );
+            InRoomResource.AddMethod("POST", new LambdaIntegration(showUserInRoom));
 
             //ユーザーデータを取得したりする関数の定義
             var userResource = api.Root.AddResource("user");
@@ -55,14 +67,15 @@ namespace Intern202201AwsCdk
                 AllowOrigins = new string[1] { "*" },
             });
             historyPushResource.AddMethod("POST", new LambdaIntegration(pushHistory));
-            var historyShowResource=historyResourse.AddResource("show");
-            historyShowResource.AddCorsPreflight(new CorsOptions{
-                                AllowHeaders = new string[1] { "Content-Type" },
+            var historyShowResource = historyResourse.AddResource("show");
+            historyShowResource.AddCorsPreflight(new CorsOptions
+            {
+                AllowHeaders = new string[1] { "Content-Type" },
                 AllowMethods = new string[2] { "OPTIONS", "POST" },
                 AllowOrigins = new string[1] { "*" },
 
             });
-            historyShowResource.AddMethod("POST",new LambdaIntegration(showHistory));
+            historyShowResource.AddMethod("POST", new LambdaIntegration(showHistory));
         }
     }
 }
